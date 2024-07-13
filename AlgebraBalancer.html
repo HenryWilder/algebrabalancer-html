@@ -48,6 +48,15 @@
             content: attr(placeholder);
             color: #555;
         }
+        .scope1 {
+            color: gold;
+        }
+        .scope2 {
+            color: magenta;
+        }
+        .scope3 {
+            color: dodgerblue;
+        }
     </style>
 </head>
 <body>
@@ -58,8 +67,28 @@
 
     <script>
         const notesSection = document.getElementById("notes-section");
+
         notesSection.addEventListener("input", () => {
-            if (notesSection.innerHTML == "<br>" || notesSection.innerHTML == "<div><br></div>") notesSection.innerHTML = "";
+            if (notesSection.innerHTML == "<br>" || notesSection.innerHTML == "<div><br></div>") {
+                notesSection.innerHTML = "";
+            }
+        });
+
+        notesSection.addEventListener("keypress", (e) => {
+            if (e.key == "(") {
+                let range = window.getSelection().getRangeAt(0);
+                console.log(range);
+                let contents = range.extractContents();
+                console.log(contents);
+                let lparen = document.createTextNode("(");
+                contents.prepend(lparen);
+                let rparen = document.createTextNode(")");
+                contents.append(rparen);
+                range.insertNode(contents);
+                range.setStartAfter(lparen);
+                range.setEndBefore(rparen);
+                e.preventDefault();
+            }
         });
     </script>
 </body>
