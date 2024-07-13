@@ -48,14 +48,25 @@
             content: attr(placeholder);
             color: #555;
         }
-        .scope1 {
-            color: gold;
+        .scope {
+            &::before, &&::after { color: gold; }
+            .scope {
+                &::before, &&::after { color: magenta; }
+                .scope {
+                    &::before, &&::after { color: dodgerblue; }
+                }
+            }
         }
-        .scope2 {
-            color: magenta;
+        .scope {
+            &.lparen::before { content: "("; user-select: all; }
+            &.rparen::after  { content: ")"; user-select: all; }
+            &.lbrack::before { content: "["; user-select: all; }
+            &.rbrack::after  { content: "]"; user-select: all; }
+            &.lbrace::before { content: "{"; user-select: all; }
+            &.rbrace::after  { content: "}"; user-select: all; }
         }
-        .scope3 {
-            color: dodgerblue;
+        .cmd {
+            color: darkorchid;
         }
     </style>
 </head>
@@ -74,19 +85,118 @@
             }
         });
 
-        notesSection.addEventListener("keypress", (e) => {
-            if (e.key == "(") {
+        notesSection.addEventListener("input", () => {
+            let rx = /\\sum(?=[\s}\\\d])/;
+            if (rx.test(notesSection.innerHTML)) {
                 let range = window.getSelection().getRangeAt(0);
-                console.log(range);
-                let contents = range.extractContents();
-                console.log(contents);
-                let lparen = document.createTextNode("(");
-                contents.prepend(lparen);
-                let rparen = document.createTextNode(")");
-                contents.append(rparen);
-                range.insertNode(contents);
-                range.setStartAfter(lparen);
-                range.setEndBefore(rparen);
+                let sumNode = document.createElement("span");
+                sumNode.innerHTML = "&sum;";
+                notesSection.replaceWith("", sumNode);
+            }
+        });
+
+        /** @type {Node|null} */
+        let currentCommandNode = null;
+
+        const startNewCommand = (range) => {
+            currentCommandNode = document.createElement("span");
+            currentCommandNode.classList.add("cmd");
+            let commandOpener = document.createTextNode("\\");
+            let commandCloser = document.createTextNode("");
+            currentCommandNode.appendChild(commandOpener);
+            currentCommandNode.appendChild(commandCloser);
+            range.insertNode(currentCommandNode);
+            range.setStartAfter(currentCommandNode);
+            range.setEndBefore(commandCloser);
+        }
+
+        notesSection.addEventListener("keypress", (e) => {
+            let range = window.getSelection().getRangeAt(0);
+            if (e.key == "(") {
+                let scope = document.createElement("span");
+                scope.classList.add("scope", "lparen", "rparen");
+                range.surroundContents(scope);
+                e.preventDefault();
+            } else if (e.key == "^") {
+                let sup = document.createElement("sup");
+                range.surroundContents(sup);
+                e.preventDefault();
+            } else if (e.key == "_") {
+                let sub = document.createElement("sub");
+                range.surroundContents(sub);
+                e.preventDefault();
+            } else if (currentCommandNode !== null && /[\s\\]/.test(e.key)) {
+                let replacement = document.createElement("span");
+                replacement.innerHTML = "&sum;";
+                currentCommandNode.replaceWith(replacement);
+                range.setStartAfter(replacement);
+                currentCommandNode = null;
+                if (e.key == "\\") startNewCommand(range);
+                else if (/\s/.test(e.key)) range.insertNode(document.createTextNode(e.key));
+                e.preventDefault();
+            } else if (e.key == "\\") {
+                startNewCommand(range);
+                e.preventDefault();
+            } else if (currentCommandNode === null && /[a-zA-Z]/.test(e.key)) {
+                let str;
+                switch (e.key) {
+                    case "A" : str = "𝐴"; break;
+                    case "B" : str = "𝐵"; break;
+                    case "C" : str = "𝐶"; break;
+                    case "D" : str = "𝐷"; break;
+                    case "E" : str = "𝐸"; break;
+                    case "F" : str = "𝐹"; break;
+                    case "G" : str = "𝐺"; break;
+                    case "H" : str = "𝐻"; break;
+                    case "I" : str = "𝐼"; break;
+                    case "J" : str = "𝐽"; break;
+                    case "K" : str = "𝐾"; break;
+                    case "L" : str = "𝐿"; break;
+                    case "M" : str = "𝑀"; break;
+                    case "N" : str = "𝑁"; break;
+                    case "O" : str = "𝑂"; break;
+                    case "P" : str = "𝑃"; break;
+                    case "Q" : str = "𝑄"; break;
+                    case "R" : str = "𝑅"; break;
+                    case "S" : str = "𝑆"; break;
+                    case "T" : str = "𝑇"; break;
+                    case "U" : str = "𝑈"; break;
+                    case "V" : str = "𝑉"; break;
+                    case "W" : str = "𝑊"; break;
+                    case "X" : str = "𝑋"; break;
+                    case "Y" : str = "𝑌"; break;
+                    case "Z" : str = "𝑍"; break;
+                    case "a" : str = "𝑎"; break;
+                    case "b" : str = "𝑏"; break;
+                    case "c" : str = "𝑐"; break;
+                    case "d" : str = "𝑑"; break;
+                    case "e" : str = "𝑒"; break;
+                    case "f" : str = "𝑓"; break;
+                    case "g" : str = "𝑔"; break;
+                    case "i" : str = "𝑖"; break;
+                    case "h" : str = "ℎ"; break;
+                    case "j" : str = "𝑗"; break;
+                    case "k" : str = "𝑘"; break;
+                    case "l" : str = "𝑙"; break;
+                    case "m" : str = "𝑚"; break;
+                    case "n" : str = "𝑛"; break;
+                    case "o" : str = "𝑜"; break;
+                    case "p" : str = "𝑝"; break;
+                    case "q" : str = "𝑞"; break;
+                    case "r" : str = "𝑟"; break;
+                    case "s" : str = "𝑠"; break;
+                    case "t" : str = "𝑡"; break;
+                    case "u" : str = "𝑢"; break;
+                    case "v" : str = "𝑣"; break;
+                    case "w" : str = "𝑤"; break;
+                    case "x" : str = "𝑥"; break;
+                    case "y" : str = "𝑦"; break;
+                    case "z" : str = "𝑧"; break;
+                }
+                let node = document.createTextNode(str);
+                range.extractContents();
+                range.insertNode(node);
+                range.setStartAfter(node);
                 e.preventDefault();
             }
         });
